@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Journal — My Blog</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Fira+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #faf7f2;
+      --paper:    #ffffff;
+      --ink:      #1a1612;
+      --muted:    #8a7f74;
+      --accent:   #c0392b;
+      --border:   #e0d8cc;
+      --tag-bg:   #f0ebe2;
+      --success:  #27ae60;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Fira Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--ink);
+      color: var(--bg);
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 70px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.2);
+    }
+
+    .logo {
+      font-family: 'Lora', serif;
+      font-size: 1.4rem;
+    }
+    .logo span { color: var(--accent); font-style: italic; }
+
+    /* ── NEW POST BUTTON in header ── */
+    .new-post-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 20px;
+      font-family: 'Fira Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.03em;
+    }
+    .new-post-btn:hover  { opacity: 0.85; }
+    .new-post-btn:active { transform: scale(0.97); }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--ink);
+      color: var(--bg);
+      padding: 70px 40px 50px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 28px,
+        rgba(255,255,255,0.03) 28px, rgba(255,255,255,0.03) 29px
+      );
+    }
+    .hero-date {
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .hero h1 {
+      font-family: 'Lora', serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      line-height: 1.2;
+      max-width: 620px;
+      margin: 0 auto 16px;
+      position: relative;
+    }
+    .hero p {
+      color: rgba(250,247,242,0.6);
+      max-width: 460px;
+      margin: 0 auto;
+      font-size: 0.95rem;
+      position: relative;
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 50px 40px;
+      display: grid;
+      grid-template-columns: 1fr 290px;
+      gap: 56px;
+      align-items: start;
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 180px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px 10px 38px;
+      font-family: 'Fira Sans', sans-serif;
+      font-size: 0.88rem;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box input:focus { border-color: var(--accent); }
+    .search-box input::placeholder { color: var(--muted); }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted); font-size: 0.85rem;
+    }
+    .tag-filter { display: flex; gap: 7px; flex-wrap: wrap; }
+    .tag-btn {
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-family: 'Fira Sans', sans-serif;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tag-btn:hover, .tag-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* ── POST CARDS ── */
+    #posts-container { display: flex; flex-direction: column; gap: 28px; }
+
+    .post-card {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: fadeUp 0.35s ease both;
+    }
+    .post-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.08);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .post-banner { height: 5px; background: var(--accent); }
+    .post-card.featured .post-banner {
+      background: linear-gradient(90deg, var(--accent), #e67e22);
+    }
+    .post-body { padding: 26px 30px; }
+    .post-meta {
+      display: flex; align-items: center;
+      gap: 10px; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .post-date { font-size: 0.76rem; color: var(--muted); }
+    .post-tag {
+      background: var(--tag-bg); color: var(--accent);
+      border-radius: 20px; padding: 2px 10px;
+      font-size: 0.72rem; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .post-title {
+      font-family: 'Lora', serif;
+      font-size: 1.35rem; line-height: 1.3;
+      margin-bottom: 10px;
+    }
+    .post-card.featured .post-title { font-size: 1.6rem; }
+    .post-excerpt {
+      color: var(--muted); font-size: 0.9rem;
+      line-height: 1.7; margin-bottom: 18px;
+    }
+    .post-footer {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .read-more {
+      font-size: 0.8rem; font-weight: 500; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      border-bottom: 1px solid transparent; transition: border-color 0.2s;
+      background: none; border-top: none; border-left: none; border-right: none;
+      cursor: pointer; font-family: 'Fira Sans', sans-serif; padding: 0;
+    }
+    .read-more:hover { border-bottom-color: var(--accent); }
+    .read-time { font-size: 0.76rem; color: var(--muted); }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center; padding: 50px 20px; color: var(--muted);
+    }
+    .empty-state .emoji { font-size: 2.2rem; margin-bottom: 10px; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { display: flex; flex-direction: column; gap: 24px; }
+    .widget {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+    }
+    .widget-title {
+      font-family: 'Lora', serif; font-size: 0.95rem;
+      margin-bottom: 14px; padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .about-avatar {
+      width: 58px; height: 58px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #e67e22);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin-bottom: 12px;
+    }
+    .about-name { font-family: 'Lora', serif; font-size: 0.95rem; margin-bottom: 6px; }
+    .about-bio { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    .archive-list { list-style: none; }
+    .archive-list li {
+      display: flex; justify-content: space-between;
+      padding: 7px 0; border-bottom: 1px solid var(--border);
+      font-size: 0.85rem; cursor: pointer; transition: color 0.2s;
+    }
+    .archive-list li:last-child { border-bottom: none; }
+    .archive-list li:hover { color: var(--accent); }
+    .archive-count {
+      background: var(--tag-bg); border-radius: 20px;
+      padding: 1px 8px; font-size: 0.72rem; color: var(--muted);
+    }
+    .tags-cloud { display: flex; flex-wrap: wrap; gap: 7px; }
+    .cloud-tag {
+      background: var(--tag-bg); border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 11px;
+      font-size: 0.78rem; color: var(--muted); cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cloud-tag:hover { background: var(--accent); border-color: var(--accent); color: white; }
+
+    /* ── READ POST MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(26,22,18,0.75);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--paper); border-radius: 16px;
+      max-width: 660px; width: 100%;
+      max-height: 82vh; overflow-y: auto;
+      padding: 44px; position: relative;
+      transform: translateY(18px); transition: transform 0.3s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-close {
+      position: absolute; top: 18px; right: 18px;
+      background: var(--tag-bg); border: none; border-radius: 50%;
+      width: 34px; height: 34px; font-size: 1rem;
+      cursor: pointer; color: var(--muted); transition: background 0.2s;
+    }
+    .modal-close:hover { background: var(--border); }
+    .modal-tag { color: var(--accent); font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+    .modal-title { font-family: 'Lora', serif; font-size: 1.9rem; line-height: 1.25; margin-bottom: 8px; }
+    .modal-meta { color: var(--muted); font-size: 0.8rem; margin-bottom: 26px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+    .modal-content { font-size: 0.97rem; line-height: 1.85; color: #333; }
+    .modal-content p { margin-bottom: 16px; }
+
+    /* ── WRITE POST MODAL ── */
+    .write-overlay {
+      position: fixed; inset: 0;
+      background: rgba(26,22,18,0.8);
+      z-index: 300;
+      display: flex; align-items: center; justify-content: center;
+      padding: 30px 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .write-overlay.open { opacity: 1; pointer-events: all; }
+
+    .write-modal {
+      background: var(--paper); border-radius: 16px;
+      max-width: 700px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+      padding: 44px;
+      transform: translateY(20px); transition: transform 0.3s;
+    }
+    .write-overlay.open .write-modal { transform: translateY(0); }
+
+    .write-modal h2 {
+      font-family: 'Lora', serif;
+      font-size: 1.6rem; margin-bottom: 6px;
+    }
+    .write-modal .write-subtitle {
+      color: var(--muted); font-size: 0.85rem; margin-bottom: 28px;
+    }
+
+    /* Form fields */
+    .field { margin-bottom: 20px; }
+
+    .field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+
+    /* 
+      KEY CONCEPT: These are HTML form inputs!
+      Each input has an "id" so JavaScript can grab its value.
+    */
+    .field input[type="text"],
+    .field select,
+    .field textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-family: 'Fira Sans', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 300;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus { border-color: var(--accent); }
+    .field textarea { resize: vertical; min-height: 180px; line-height: 1.7; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* Character counter */
+    .char-count { font-size: 0.75rem; color: var(--muted); text-align: right; margin-top: 4px; }
+    .char-count.warn { color: var(--accent); }
+
+    /* Form buttons */
+    .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; }
+
+    .btn-cancel {
+      background: var(--tag-bg); border: 1px solid var(--border);
+      color: var(--muted); border-radius: 8px;
+      padding: 10px 22px; font-family: 'Fira Sans', sans-serif;
+      font-size: 0.88rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-cancel:hover { background: var(--border); }
+
+    .btn-publish {
+      background: var(--accent); color: white; border: none;
+      border-radius: 8px; padding: 10px 28px;
+      font-family: 'Fira Sans', sans-serif;
+      font-size: 0.88rem; font-weight: 500;
+      cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-publish:hover  { opacity: 0.88; }
+    .btn-publish:active { transform: scale(0.97); }
+
+    /* Error messages */
+    .field-error {
+      font-size: 0.78rem; color: var(--accent);
+      margin-top: 5px; display: none;
+    }
+    .field.invalid .field-error   { display: block; }
+    .field.invalid input,
+    .field.invalid textarea,
+    .field.invalid select { border-color: var(--accent); }
+
+    /* Success toast */
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--success); color: white;
+      padding: 12px 28px; border-radius: 30px;
+      font-size: 0.88rem; font-weight: 500;
+      opacity: 0; pointer-events: none;
+      transition: all 0.4s;
+      z-index: 500;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink); color: rgba(250,247,242,0.5);
+      text-align: center; padding: 24px;
+      font-size: 0.8rem; margin-top: 40px;
+    }
+    footer span { color: var(--accent); }
+
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; padding: 30px 20px; }
+      .sidebar { display: none; }
+      header { padding: 0 20px; }
+      .write-modal, .modal { padding: 26px; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">Daily<span>Journal</span></div>
+  <!-- 
+    onclick="openWriteModal()" calls the JavaScript function
+    that opens the "Write New Post" form 
+  -->
+  <button class="new-post-btn" onclick="openWriteModal()">✏️ Write New Post</button>
+</header>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-date" id="hero-date"></div>
+  <h1>Thoughts, stories &amp; ideas worth sharing</h1>
+  <p>A personal journal updated daily — honest writing about life, learning, and everything in between.</p>
+</div>
+
+<!-- ── MAIN LAYOUT ── -->
+<div class="container">
+  <main>
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search posts...">
+      </div>
+      <div class="tag-filter" id="tag-filter"></div>
+    </div>
+    <div id="posts-container"></div>
+  </main>
+
+  <aside class="sidebar">
+    <div class="widget">
+      <div class="widget-title">About Me</div>
+      <div class="about-avatar">✍️</div>
+      <div class="about-name">Alex Morgan</div>
+      <p class="about-bio">Writer, thinker, coffee enthusiast. I write here every day about whatever's on my mind.</p>
+    </div>
+    <div class="widget">
+      <div class="widget-title">Archive</div>
+      <ul class="archive-list" id="archive-list"></ul>
+    </div>
+    <div class="widget">
+      <div class="widget-title">Topics</div>
+      <div class="tags-cloud" id="tags-cloud"></div>
+    </div>
+
+    <!-- Storage info widget -->
+    <div class="widget">
+      <div class="widget-title">Storage</div>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;">
+        Your posts are saved in your browser's localStorage and will survive page refreshes. 💾
+      </p>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;">
+        Posts saved: <strong id="storage-count" style="color:var(--ink)">0</strong>
+      </p>
+      <button onclick="clearStorage()"
+        style="background:transparent;border:1px solid var(--border);color:var(--muted);
+               border-radius:8px;padding:7px 14px;font-family:'Fira Sans',sans-serif;
+               font-size:0.8rem;cursor:pointer;width:100%;transition:all 0.2s;"
+        onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        🗑️ Clear all saved posts
+      </button>
+    </div>
+  </aside>
+</div>
+
+<!-- ── READ POST MODAL ── -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeReadModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeReadModal()">✕</button>
+    <div class="modal-tag"     id="modal-tag"></div>
+    <h2 class="modal-title"   id="modal-title"></h2>
+    <div class="modal-meta"   id="modal-meta"></div>
+    <div class="modal-content" id="modal-content"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     WRITE NEW POST MODAL
+     This is the form where you create a new blog post.
+     Each input has an id="" so JavaScript can read its value.
+═══════════════════════════════════════════ -->
+<div class="write-overlay" id="write-overlay" onclick="closeWriteModal(event)">
+  <div class="write-modal" id="write-modal">
+
+    <h2>Write New Post</h2>
+    <p class="write-subtitle">Fill in the details below and hit Publish to add it to your blog.</p>
+
+    <!-- TITLE FIELD -->
+    <div class="field" id="field-title">
+      <label for="input-title">Post Title *</label>
+      <!--
+        id="input-title" — JavaScript will use this ID to read the value
+        oninput="..." — runs JavaScript every time you type
+      -->
+      <input type="text" id="input-title" placeholder="e.g. What I learned this week..."
+             oninput="countChars('input-title', 'count-title', 80)">
+      <div class="char-count" id="count-title">0 / 80</div>
+      <div class="field-error">Please enter a title.</div>
+    </div>
+
+    <!-- EXCERPT FIELD -->
+    <div class="field" id="field-excerpt">
+      <label for="input-excerpt">Short Excerpt * <small style="font-weight:300;text-transform:none">(preview shown on card)</small></label>
+      <input type="text" id="input-excerpt" placeholder="A one-sentence summary of your post..."
+             oninput="countChars('input-excerpt', 'count-excerpt', 160)">
+      <div class="char-count" id="count-excerpt">0 / 160</div>
+      <div class="field-error">Please enter a short excerpt.</div>
+    </div>
+
+    <!-- CONTENT FIELD -->
+    <div class="field" id="field-content">
+      <label for="input-content">Full Content *</label>
+      <!--
+        textarea — a multi-line text input, great for long content
+        rows="8"  — how tall it starts
+      -->
+      <textarea id="input-content" rows="8"
+                placeholder="Write your full blog post here...&#10;&#10;You can write multiple paragraphs. Each paragraph will be separated automatically."></textarea>
+      <div class="field-error">Please write some content.</div>
+    </div>
+
+    <!-- TAG AND READ TIME (side by side) -->
+    <div class="field-row">
+
+      <!-- TAG / CATEGORY -->
+      <div class="field" id="field-tag">
+        <label for="input-tag">Category *</label>
+        <!--
+          select — a dropdown menu
+          option  — each choice inside the dropdown
+        -->
+        <select id="input-tag">
+          <option value="">— Pick a category —</option>
+          <option value="Life">Life</option>
+          <option value="Books">Books</option>
+          <option value="Travel">Travel</option>
+          <option value="Learning">Learning</option>
+          <option value="Food">Food</option>
+          <option value="Tech">Tech</option>
+          <option value="Health">Health</option>
+          <option value="Other">Other</option>
+        </select>
+        <div class="field-error">Please choose a category.</div>
+      </div>
+
+      <!-- READ TIME -->
+      <div class="field">
+        <label for="input-readtime">Est. Read Time</label>
+        <select id="input-readtime">
+          <option value="1 min read">1 min read</option>
+          <option value="2 min read">2 min read</option>
+          <option value="3 min read" selected>3 min read</option>
+          <option value="4 min read">4 min read</option>
+          <option value="5 min read">5 min read</option>
+          <option value="7 min read">7 min read</option>
+          <option value="10 min read">10 min read</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- FORM ACTION BUTTONS -->
+    <div class="form-actions">
+      <button class="btn-cancel" onclick="closeWriteModal()">Cancel</button>
+      <!--
+        onclick="publishPost()" — calls the JavaScript function
+        that reads all the form values and creates a new post
+      -->
+      <button class="btn-publish" onclick="publishPost()">🚀 Publish Post</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── SUCCESS TOAST ── -->
+<div class="toast" id="toast">✅ Post published successfully!</div>
+
+<!-- ── FOOTER ── -->
+<footer>© 2024 <span>DailyJournal</span> — Written with ❤️ every single day</footer>
+
+
+<script>
+  // ═══════════════════════════════════════════════
+  //  DATA — the posts array
+  //  Each post is an "object" with key: value pairs
+  // ═══════════════════════════════════════════════
+  let posts = [
+    {
+      id: 1,
+      title: "Why I Started Writing Every Single Day",
+      excerpt: "It started as a challenge — just 30 days. Two years later, I haven't stopped.",
+      content: `<p>Two years ago, I made a bet with myself. Write something — anything — every single day for 30 days. No excuses, no skipping, no minimum length. Just the act of putting words on a page.</p><p>I expected it to be hard. I didn't expect it to change the way I think entirely.</p><p>The first week was the hardest. Some days I wrote three sentences. But I showed up every day, and somewhere around day 12, something shifted. The words started coming easier.</p><p>Writing every day is less about producing great work and more about staying in practice. Like a musician running scales — most of it isn't music, but it keeps your fingers ready for when the music comes.</p>`,
+      date: "March 10, 2024",
+      tag: "Life",
+      readTime: "4 min read",
+      featured: true
+    },
+    {
+      id: 2,
+      title: "The Best Book I Read This Month",
+      excerpt: "A quiet novel about memory and loss that I almost put down — and couldn't stop thinking about for weeks.",
+      content: `<p>I almost gave up on this book after the first chapter. The prose felt slow, the narrator unreliable. I'm so glad I kept reading.</p><p>It's a story told in reverse. We start at the ending and work our way backward, and what first feels like a gimmick becomes, by the final pages, absolutely devastating in its logic.</p><p>What struck me most was how the author handles memory. We don't remember our lives chronologically. We remember in flashes, in feelings. This book captures that perfectly.</p>`,
+      date: "March 9, 2024",
+      tag: "Books",
+      readTime: "3 min read",
+      featured: false
+    },
+    {
+      id: 3,
+      title: "Notes from a Weekend in the Mountains",
+      excerpt: "No phone signal, no agenda, no alarm clock. Just two days of cold air and long walks.",
+      content: `<p>I left Friday afternoon with a bag I packed in ten minutes. I turned off notifications before the city was behind me.</p><p>The first evening, I didn't know what to do with myself. I sat by the window and watched the light change on the ridge until it was dark.</p><p>Saturday I walked for five hours. The thinking felt different out there — less circular, like the space between thoughts got bigger and something useful could grow in it.</p><p>I came back with three good ideas and the firm belief that everyone should disappear for a weekend at least twice a year.</p>`,
+      date: "March 8, 2024",
+      tag: "Travel",
+      readTime: "5 min read",
+      featured: false
+    }
+  ];
+
+  // ═══════════════════════════════════
+  //  STATE — track current filter/search
+  // ═══════════════════════════════════
+  let activeTag   = 'All';
+  let searchQuery = '';
+
+  // ═══════════════════════════════════
+  //  INIT — runs when page loads
+  // ═══════════════════════════════════
+  function init() {
+    // ▶ LOAD saved posts from localStorage first!
+    loadPosts();
+
+    // Show today's date in hero
+    const today = new Date();
+    document.getElementById('hero-date').textContent =
+      today.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+    buildTagFilter();
+    rebuildSidebar();
+    renderPosts();
+
+    // Listen for typing in search box
+    document.getElementById('search-input').addEventListener('input', function() {
+      searchQuery = this.value.toLowerCase();
+      renderPosts();
+    });
+
+    updateStorageCount();  // ← show how many posts are saved
+  }
+
+  // ═══════════════════════════════════
+  //  GET UNIQUE TAGS from posts array
+  // ═══════════════════════════════════
+  function getUniqueTags() {
+    // new Set() automatically removes duplicates
+    return ['All', ...new Set(posts.map(p => p.tag))];
+  }
+
+  // ═══════════════════════════════════
+  //  BUILD TAG FILTER BUTTONS
+  // ═══════════════════════════════════
+  function buildTagFilter() {
+    const container = document.getElementById('tag-filter');
+    container.innerHTML = '';   // clear first
+
+    getUniqueTags().forEach(tag => {
+      const btn = document.createElement('button');
+      btn.className = 'tag-btn' + (tag === activeTag ? ' active' : '');
+      btn.textContent = tag;
+      btn.onclick = () => {
+        activeTag = tag;
+        // Update which button looks active
+        document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderPosts();
+      };
+      container.appendChild(btn);
+    });
+  }
+
+  // ═══════════════════════════════════
+  //  REBUILD SIDEBAR (tags + archive)
+  //  Called after a new post is added
+  // ═══════════════════════════════════
+  function rebuildSidebar() {
+    // Tags cloud
+    const tagsCloud = document.getElementById('tags-cloud');
+    tagsCloud.innerHTML = '';
+    getUniqueTags().filter(t => t !== 'All').forEach(tag => {
+      const span = document.createElement('span');
+      span.className = 'cloud-tag';
+      span.textContent = tag;
+      span.onclick = () => {
+        activeTag = tag;
+        buildTagFilter();
+        renderPosts();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+      tagsCloud.appendChild(span);
+    });
+
+    // Archive list — group posts by month
+    const months = {};
+    posts.forEach(p => {
+      const parts = p.date.split(' ');           // ["March", "10,", "2024"]
+      const month = parts[0] + ' ' + parts[2];  // "March 2024"
+      months[month] = (months[month] || 0) + 1;
+    });
+
+    const archiveList = document.getElementById('archive-list');
+    archiveList.innerHTML = '';
+    Object.entries(months).forEach(([month, count]) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span>${month}</span><span class="archive-count">${count}</span>`;
+      archiveList.appendChild(li);
+    });
+  }
+
+  // ═══════════════════════════════════
+  //  RENDER POSTS to the page
+  // ═══════════════════════════════════
+  function renderPosts() {
+    const container = document.getElementById('posts-container');
+
+    // Filter by tag and search query
+    let filtered = posts.filter(p => {
+      const matchTag    = activeTag === 'All' || p.tag === activeTag;
+      const matchSearch = p.title.toLowerCase().includes(searchQuery) ||
+                          p.excerpt.toLowerCase().includes(searchQuery);
+      return matchTag && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="emoji">📭</div>
+          <p>No posts found. Try a different search or tag!</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = filtered.map((post, i) => `
+      <article class="post-card ${post.featured && i === 0 ? 'featured' : ''}"
+               onclick="openReadModal(${post.id})"
+               style="animation-delay:${i * 0.06}s">
+        <div class="post-banner"></div>
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="post-date">📅 ${post.date}</span>
+            <span class="post-tag">${post.tag}</span>
+          </div>
+          <h2 class="post-title">${post.title}</h2>
+          <p class="post-excerpt">${post.excerpt}</p>
+          <div class="post-footer">
+            <button class="read-more">Read more →</button>
+            <span class="read-time">⏱ ${post.readTime}</span>
+          </div>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  // ═══════════════════════════════════
+  //  CHARACTER COUNTER
+  //  Shows how many characters typed vs limit
+  // ═══════════════════════════════════
+  function countChars(inputId, countId, max) {
+    const input = document.getElementById(inputId);
+    const counter = document.getElementById(countId);
+    const len = input.value.length;
+    counter.textContent = `${len} / ${max}`;
+    // Turn red if over 90% of limit
+    counter.classList.toggle('warn', len > max * 0.9);
+  }
+
+  // ═══════════════════════════════════
+  //  VALIDATE FORM — check required fields
+  // ═══════════════════════════════════
+  function validateForm() {
+    let valid = true;
+
+    // List of fields to check: [fieldId, inputId]
+    const required = [
+      ['field-title',   'input-title'],
+      ['field-excerpt', 'input-excerpt'],
+      ['field-content', 'input-content'],
+      ['field-tag',     'input-tag'],
+    ];
+
+    required.forEach(([fieldId, inputId]) => {
+      const field = document.getElementById(fieldId);
+      const input = document.getElementById(inputId);
+      const empty = input.value.trim() === '';
+      // Add/remove "invalid" class to show/hide error message
+      field.classList.toggle('invalid', empty);
+      if (empty) valid = false;
+    });
+
+    return valid;   // true = all good, false = has errors
+  }
+
+  // ═══════════════════════════════════
+  //  PUBLISH POST — the main function!
+  //  Reads form values and creates a new post
+  // ═══════════════════════════════════
+  function publishPost() {
+    // Step 1: Validate — stop if anything is missing
+    if (!validateForm()) return;
+
+    // Step 2: Read values from each form field using their id
+    const title    = document.getElementById('input-title').value.trim();
+    const excerpt  = document.getElementById('input-excerpt').value.trim();
+    const rawText  = document.getElementById('input-content').value.trim();
+    const tag      = document.getElementById('input-tag').value;
+    const readTime = document.getElementById('input-readtime').value;
+
+    // Step 3: Convert plain text paragraphs into HTML <p> tags
+    //  .split('\n\n') breaks text at blank lines into an array of paragraphs
+    //  .map(p => `<p>${p}</p>`) wraps each in a <p> tag
+    //  .join('') joins them back into one string
+    const content = rawText
+      .split('\n\n')
+      .filter(p => p.trim() !== '')
+      .map(p => `<p>${escapeHTML(p.trim())}</p>`)
+      .join('');
+
+    // Step 4: Format today's date nicely
+    const today = new Date();
+    const date = today.toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    // Step 5: Build the new post object
+    const newPost = {
+      id:       Date.now(),     // unique ID using current timestamp
+      title:    escapeHTML(title),
+      excerpt:  escapeHTML(excerpt),
+      content:  content,
+      date:     date,
+      tag:      tag,
+      readTime: readTime,
+      featured: false
+    };
+
+    // Step 6: Add to the FRONT of the posts array (newest first)
+    posts.unshift(newPost);
+
+    // Step 6b: SAVE to localStorage so it survives refresh!
+    savePosts();
+
+    // Step 7: Reset & close the form
+    resetForm();
+    closeWriteModal();
+
+    // Step 8: Refresh tag filter, sidebar, and post list
+    activeTag = 'All';
+    buildTagFilter();
+    rebuildSidebar();
+    renderPosts();
+
+    // Step 9: Show success toast notification
+    showToast();
+
+    // Step 10: Scroll to the top to see the new post
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ═══════════════════════════════════
+  //  RESET FORM — clear all inputs
+  // ═══════════════════════════════════
+  function resetForm() {
+    ['input-title', 'input-excerpt', 'input-content'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('input-tag').value = '';
+    document.getElementById('input-readtime').value = '3 min read';
+
+    // Reset character counters
+    document.getElementById('count-title').textContent   = '0 / 80';
+    document.getElementById('count-excerpt').textContent = '0 / 160';
+
+    // Remove all validation errors
+    ['field-title','field-excerpt','field-content','field-tag'].forEach(id => {
+      document.getElementById(id).classList.remove('invalid');
+    });
+  }
+
+  // ═══════════════════════════════════
+  //  OPEN / CLOSE WRITE MODAL
+  // ═══════════════════════════════════
+  function openWriteModal() {
+    document.getElementById('write-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    // Focus on title input after short delay
+    setTimeout(() => document.getElementById('input-title').focus(), 300);
+  }
+
+  function closeWriteModal(event) {
+    if (event && event.target !== document.getElementById('write-overlay')) return;
+    document.getElementById('write-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // ═══════════════════════════════════
+  //  OPEN / CLOSE READ MODAL
+  // ═══════════════════════════════════
+  function openReadModal(id) {
+    const post = posts.find(p => p.id === id);
+    if (!post) return;
+
+    document.getElementById('modal-tag').textContent    = post.tag;
+    document.getElementById('modal-title').textContent  = post.title;
+    document.getElementById('modal-meta').textContent   = `${post.date}  ·  ${post.readTime}`;
+    document.getElementById('modal-content').innerHTML  = post.content;
+
+    document.getElementById('modal-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeReadModal(event) {
+    if (event && event.target !== document.getElementById('modal-overlay')) return;
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // ═══════════════════════════════════
+  //  SHOW TOAST NOTIFICATION
+  // ═══════════════════════════════════
+  function showToast() {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    // Auto-hide after 3 seconds
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // ═══════════════════════════════════
+  //  ESCAPE HTML — security: prevent
+  //  malicious code from being injected
+  // ═══════════════════════════════════
+  function escapeHTML(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  // Close modals with Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.getElementById('modal-overlay').classList.remove('open');
+      document.getElementById('write-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // ═══════════════════════════════════════════════════
+  //  LOCAL STORAGE — save & load posts
+  //
+  //  localStorage works like a key-value store:
+  //    KEY   = a name you choose (like a label)
+  //    VALUE = the data you want to save (must be text)
+  //
+  //  Since posts is an array (not text), we use:
+  //    JSON.stringify() → converts array → text  (to SAVE)
+  //    JSON.parse()     → converts text → array  (to LOAD)
+  // ═══════════════════════════════════════════════════
+
+  // SAVE: called every time posts array changes
+  function savePosts() {
+    localStorage.setItem('blog-posts', JSON.stringify(posts));
+    updateStorageCount();
+  }
+
+  // LOAD: called once when the page first opens
+  function loadPosts() {
+    const saved = localStorage.getItem('blog-posts');
+    if (saved) {
+      posts = JSON.parse(saved);
+    }
+  }
+
+  // UPDATE the "Posts saved: X" counter in the sidebar
+  function updateStorageCount() {
+    const el = document.getElementById('storage-count');
+    if (el) el.textContent = posts.length;
+  }
+
+  // CLEAR all saved posts from localStorage
+  function clearStorage() {
+    const confirmed = confirm(
+      'Are you sure you want to delete ALL saved posts?\nThis cannot be undone!'
+    );
+    if (!confirmed) return;
+
+    // Remove from localStorage
+    localStorage.removeItem('blog-posts');
+
+    // Reset posts array to empty
+    posts = [];
+
+    // Refresh everything
+    buildTagFilter();
+    rebuildSidebar();
+    renderPosts();
+    updateStorageCount();
+  }
+
+  // ═══════════════════════════════════
+  //  START
+  // ═══════════════════════════════════
+  init();
+</script>
+</body>
+</html>
