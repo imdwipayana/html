@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Journal — My Blog</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Fira+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+  <style>
+    :root {
+      --bg:      #faf7f2;
+      --paper:   #ffffff;
+      --ink:     #1a1612;
+      --muted:   #8a7f74;
+      --accent:  #c0392b;
+      --border:  #e0d8cc;
+      --tag-bg:  #f0ebe2;
+      --success: #27ae60;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--ink); font-family: 'Fira Sans', sans-serif; font-weight: 300; line-height: 1.7; min-height: 100vh; }
+
+    header { background: var(--ink); color: var(--bg); padding: 0 40px; display: flex; align-items: center; justify-content: space-between; height: 70px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 20px rgba(0,0,0,0.2); }
+    .logo { font-family: 'Lora', serif; font-size: 1.4rem; }
+    .logo span { color: var(--accent); font-style: italic; }
+    .new-post-btn { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 9px 20px; font-family: 'Fira Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+    .new-post-btn:hover { opacity: 0.85; }
+    .new-post-btn:active { transform: scale(0.97); }
+
+    .hero { background: var(--ink); color: var(--bg); padding: 70px 40px 50px; text-align: center; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(255,255,255,0.03) 28px, rgba(255,255,255,0.03) 29px); }
+    .hero-date { font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; position: relative; }
+    .hero h1 { font-family: 'Lora', serif; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.2; max-width: 620px; margin: 0 auto 16px; position: relative; }
+    .hero p { color: rgba(250,247,242,0.6); max-width: 460px; margin: 0 auto; font-size: 0.95rem; position: relative; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 50px 40px; display: grid; grid-template-columns: 1fr 290px; gap: 56px; align-items: start; }
+
+    .toolbar { display: flex; gap: 10px; margin-bottom: 32px; flex-wrap: wrap; align-items: center; }
+    .search-box { flex: 1; min-width: 180px; position: relative; }
+    .search-box input { width: 100%; background: var(--paper); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px 10px 38px; font-family: 'Fira Sans', sans-serif; font-size: 0.88rem; color: var(--ink); outline: none; transition: border-color 0.2s; }
+    .search-box input:focus { border-color: var(--accent); }
+    .search-box input::placeholder { color: var(--muted); }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 0.85rem; }
+    .tag-filter { display: flex; gap: 7px; flex-wrap: wrap; }
+    .tag-btn { background: var(--tag-bg); border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 6px 14px; font-family: 'Fira Sans', sans-serif; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; }
+    .tag-btn:hover, .tag-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+    #posts-container { display: flex; flex-direction: column; gap: 28px; }
+    .post-card { background: var(--paper); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; animation: fadeUp 0.35s ease both; }
+    .post-card:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,0.08); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    .post-cover { width: 100%; height: 200px; object-fit: cover; display: block; }
+    .post-banner { height: 5px; background: var(--accent); }
+    .post-card.featured .post-banner { background: linear-gradient(90deg, var(--accent), #e67e22); }
+    .post-body { padding: 26px 30px; }
+    .post-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .post-date { font-size: 0.76rem; color: var(--muted); }
+    .post-tag { background: var(--tag-bg); color: var(--accent); border-radius: 20px; padding: 2px 10px; font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+    .post-title { font-family: 'Lora', serif; font-size: 1.35rem; line-height: 1.3; margin-bottom: 10px; }
+    .post-card.featured .post-title { font-size: 1.6rem; }
+    .post-excerpt { color: var(--muted); font-size: 0.9rem; line-height: 1.7; margin-bottom: 18px; }
+    .post-footer { display: flex; justify-content: space-between; align-items: center; }
+    .read-more { font-size: 0.8rem; font-weight: 500; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid transparent; transition: border-color 0.2s; background: none; border-top: none; border-left: none; border-right: none; cursor: pointer; font-family: 'Fira Sans', sans-serif; padding: 0; }
+    .read-more:hover { border-bottom-color: var(--accent); }
+    .read-time { font-size: 0.76rem; color: var(--muted); }
+    .empty-state { text-align: center; padding: 50px 20px; color: var(--muted); }
+    .empty-state .emoji { font-size: 2.2rem; margin-bottom: 10px; }
+    .loading { text-align: center; padding: 40px; color: var(--muted); font-size: 0.9rem; }
+    .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .sidebar { display: flex; flex-direction: column; gap: 24px; }
+    .widget { background: var(--paper); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+    .widget-title { font-family: 'Lora', serif; font-size: 0.95rem; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .about-avatar { width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #e67e22); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 12px; }
+    .about-name { font-family: 'Lora', serif; font-size: 0.95rem; margin-bottom: 6px; }
+    .about-bio { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+    .archive-list { list-style: none; }
+    .archive-list li { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; cursor: pointer; transition: color 0.2s; }
+    .archive-list li:last-child { border-bottom: none; }
+    .archive-list li:hover { color: var(--accent); }
+    .archive-count { background: var(--tag-bg); border-radius: 20px; padding: 1px 8px; font-size: 0.72rem; color: var(--muted); }
+    .tags-cloud { display: flex; flex-wrap: wrap; gap: 7px; }
+    .cloud-tag { background: var(--tag-bg); border: 1px solid var(--border); border-radius: 20px; padding: 4px 11px; font-size: 0.78rem; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .cloud-tag:hover { background: var(--accent); border-color: var(--accent); color: white; }
+    .db-badge { display: inline-flex; align-items: center; gap: 6px; background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; color: #2e7d32; margin-bottom: 14px; }
+    .db-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; animation: pulse 2s ease infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(26,22,18,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 40px 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--paper); border-radius: 16px; max-width: 680px; width: 100%; max-height: 85vh; overflow-y: auto; position: relative; transform: translateY(18px); transition: transform 0.3s; }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-hero-img { width: 100%; max-height: 280px; object-fit: cover; display: block; border-radius: 16px 16px 0 0; }
+    .modal-body { padding: 36px 44px 44px; }
+    .modal-close { position: absolute; top: 14px; right: 14px; background: rgba(26,22,18,0.5); border: none; border-radius: 50%; width: 34px; height: 34px; font-size: 1rem; cursor: pointer; color: white; transition: background 0.2s; z-index: 10; }
+    .modal-close:hover { background: rgba(26,22,18,0.8); }
+    .modal-tag { color: var(--accent); font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+    .modal-title { font-family: 'Lora', serif; font-size: 1.9rem; line-height: 1.25; margin-bottom: 8px; }
+    .modal-meta { color: var(--muted); font-size: 0.8rem; margin-bottom: 26px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+    .modal-content { font-size: 0.97rem; line-height: 1.85; color: #333; }
+    .modal-content p { margin-bottom: 16px; }
+    /* Inline images inside post content */
+    .modal-content img { width: 100%; border-radius: 10px; margin: 20px 0; display: block; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .modal-content .img-caption { text-align: center; font-size: 0.82rem; color: var(--muted); margin-top: -12px; margin-bottom: 20px; font-style: italic; }
+
+    .write-overlay { position: fixed; inset: 0; background: rgba(26,22,18,0.8); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 30px 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .write-overlay.open { opacity: 1; pointer-events: all; }
+    .write-modal { background: var(--paper); border-radius: 16px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 44px; transform: translateY(20px); transition: transform 0.3s; }
+    .write-overlay.open .write-modal { transform: translateY(0); }
+    .write-modal h2 { font-family: 'Lora', serif; font-size: 1.6rem; margin-bottom: 6px; }
+    .write-subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 28px; }
+
+    .field { margin-bottom: 20px; }
+    .field label { display: block; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .field input[type="text"], .field select, .field textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 11px 14px; font-family: 'Fira Sans', sans-serif; font-size: 0.92rem; font-weight: 300; color: var(--ink); outline: none; transition: border-color 0.2s; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+    .field textarea { resize: vertical; min-height: 160px; line-height: 1.7; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .char-count { font-size: 0.75rem; color: var(--muted); text-align: right; margin-top: 4px; }
+    .char-count.warn { color: var(--accent); }
+    .field-error { font-size: 0.78rem; color: var(--accent); margin-top: 5px; display: none; }
+    .field.invalid .field-error { display: block; }
+    .field.invalid input, .field.invalid textarea, .field.invalid select { border-color: var(--accent); }
+
+    /* CONTENT EDITOR TOOLBAR */
+    .editor-toolbar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 0;
+      padding: 8px 10px;
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .editor-toolbar span {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-right: 4px;
+    }
+    /* The inline image insert button */
+    .insert-img-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-family: 'Fira Sans', sans-serif;
+      font-size: 0.8rem;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .insert-img-btn:hover { border-color: var(--accent); color: var(--accent); background: #fdf5f5; }
+    /* Hidden file input inside the button */
+    .insert-img-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+    /* Textarea connected to toolbar — square top corners */
+    .field textarea.with-toolbar { border-radius: 0 0 8px 8px; }
+
+    /* Inline image previews shown BELOW the textarea */
+    .inline-images-list {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .inline-img-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      background: var(--paper);
+    }
+    .inline-img-item img {
+      width: 100%;
+      max-height: 160px;
+      object-fit: cover;
+      display: block;
+    }
+    .inline-img-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--tag-bg);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .inline-img-tag {
+      background: var(--border);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-family: monospace;
+      font-size: 0.72rem;
+      color: var(--ink);
+    }
+    .remove-inline-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .remove-inline-btn:hover { color: var(--accent); background: rgba(192,57,43,0.1); }
+
+    .upload-area { border: 2px dashed var(--border); border-radius: 10px; padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; background: var(--bg); }
+    .upload-area:hover, .upload-area.dragover { border-color: var(--accent); background: #fdf5f5; }
+    .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+    .upload-label { font-size: 0.88rem; color: var(--muted); }
+    .upload-label span { color: var(--accent); font-weight: 500; }
+    .upload-hint { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+    .image-preview { margin-top: 12px; display: none; position: relative; }
+    .image-preview img { width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; display: block; }
+    .remove-img-btn { position: absolute; top: 8px; right: 8px; background: rgba(26,22,18,0.6); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; line-height: 1; }
+    .remove-img-btn:hover { background: rgba(192,57,43,0.85); }
+
+    .latex-hint { margin-top: 10px; background: #f8f5f0; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-size: 0.78rem; color: var(--muted); }
+    .latex-hint strong { color: var(--ink); display: block; margin-bottom: 8px; }
+    .latex-hint code { background: var(--border); padding: 1px 5px; border-radius: 3px; font-size: 0.75rem; }
+    .latex-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 16px; }
+
+    .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; }
+    .btn-cancel { background: var(--tag-bg); border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 10px 22px; font-family: 'Fira Sans', sans-serif; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; }
+    .btn-cancel:hover { background: var(--border); }
+    .btn-publish { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 28px; font-family: 'Fira Sans', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+    .btn-publish:hover { opacity: 0.88; }
+    .btn-publish:active { transform: scale(0.97); }
+
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--success); color: white; padding: 12px 28px; border-radius: 30px; font-size: 0.88rem; font-weight: 500; opacity: 0; pointer-events: none; transition: all 0.4s; z-index: 500; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    footer { background: var(--ink); color: rgba(250,247,242,0.5); text-align: center; padding: 24px; font-size: 0.8rem; margin-top: 40px; }
+    footer span { color: var(--accent); }
+
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; padding: 30px 20px; }
+      .sidebar { display: none; }
+      header { padding: 0 20px; }
+      .write-modal, .modal-body { padding: 26px; }
+      .field-row { grid-template-columns: 1fr; }
+      .latex-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Daily<span>Journal</span></div>
+  <button class="new-post-btn" onclick="openWriteModal()">✏️ Write New Post</button>
+</header>
+
+<div class="hero">
+  <div class="hero-date" id="hero-date"></div>
+  <h1>Thoughts, stories &amp; ideas worth sharing</h1>
+  <p>A personal journal updated daily — honest writing about life, learning, and everything in between.</p>
+</div>
+
+<div class="container">
+  <main>
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search posts...">
+      </div>
+      <div class="tag-filter" id="tag-filter"></div>
+    </div>
+    <div id="posts-container">
+      <div class="loading"><div class="spinner"></div><div>Loading posts...</div></div>
+    </div>
+  </main>
+
+  <aside class="sidebar">
+    <div class="widget">
+      <div class="widget-title">About Me</div>
+      <div class="about-avatar">✍️</div>
+      <div class="about-name">Alex Morgan</div>
+      <p class="about-bio">Writer, thinker, coffee enthusiast. Writing here every day about whatever's on my mind.</p>
+    </div>
+    <div class="widget">
+      <div class="widget-title">Archive</div>
+      <ul class="archive-list" id="archive-list"></ul>
+    </div>
+    <div class="widget">
+      <div class="widget-title">Topics</div>
+      <div class="tags-cloud" id="tags-cloud"></div>
+    </div>
+    <div class="widget">
+      <div class="widget-title">Storage</div>
+      <div class="db-badge"><div class="db-dot"></div>IndexedDB — unlimited</div>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px">Posts saved: <strong id="storage-count" style="color:var(--ink)">0</strong></p>
+      <button onclick="clearAllPosts()"
+        style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 14px;font-family:'Fira Sans',sans-serif;font-size:0.8rem;cursor:pointer;width:100%;transition:all 0.2s"
+        onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b'"
+        onmouseout="this.style.borderColor='';this.style.color=''">
+        🗑️ Clear all saved posts
+      </button>
+    </div>
+  </aside>
+</div>
+
+<!-- READ MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeReadModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeReadModal()">✕</button>
+    <img class="modal-hero-img" id="modal-hero-img" src="" alt="" style="display:none">
+    <div class="modal-body">
+      <div class="modal-tag"      id="modal-tag"></div>
+      <h2 class="modal-title"    id="modal-title"></h2>
+      <div class="modal-meta"    id="modal-meta"></div>
+      <div class="modal-content" id="modal-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- WRITE MODAL -->
+<div class="write-overlay" id="write-overlay" onclick="closeWriteModal(event)">
+  <div class="write-modal">
+    <h2>Write New Post</h2>
+    <p class="write-subtitle">Fill in the details below and hit Publish.</p>
+
+    <!-- TITLE -->
+    <div class="field" id="field-title">
+      <label for="input-title">Post Title *</label>
+      <input type="text" id="input-title" placeholder="e.g. What I learned this week..."
+             oninput="countChars('input-title','count-title',80)">
+      <div class="char-count" id="count-title">0 / 80</div>
+      <div class="field-error">Please enter a title.</div>
+    </div>
+
+    <!-- EXCERPT -->
+    <div class="field" id="field-excerpt">
+      <label for="input-excerpt">Short Excerpt * <small style="font-weight:300;text-transform:none">(preview on card)</small></label>
+      <input type="text" id="input-excerpt" placeholder="A one-sentence summary..."
+             oninput="countChars('input-excerpt','count-excerpt',160)">
+      <div class="char-count" id="count-excerpt">0 / 160</div>
+      <div class="field-error">Please enter a short excerpt.</div>
+    </div>
+
+    <!-- COVER IMAGE -->
+    <div class="field">
+      <label>Cover Image <small style="font-weight:300;text-transform:none">(optional — shown at top of post)</small></label>
+      <div class="upload-area" id="upload-area">
+        <input type="file" id="image-input" accept="image/*" onchange="handleCoverUpload(event)">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-label"><span>Click to upload</span> or drag &amp; drop</div>
+        <div class="upload-hint">Any size — stored in IndexedDB 🎉</div>
+      </div>
+      <div class="image-preview" id="image-preview">
+        <img id="preview-img" src="" alt="Preview">
+        <button class="remove-img-btn" onclick="removeCoverImage()">✕</button>
+      </div>
+    </div>
+
+    <!-- CONTENT with toolbar -->
+    <div class="field" id="field-content">
+      <label>Full Content *</label>
+
+      <!--
+        EDITOR TOOLBAR
+        This sits above the textarea like a mini word-processor toolbar.
+        The "📷 Insert Image" button lets you pick an image file,
+        which gets inserted as a placeholder tag at your cursor position.
+      -->
+      <div class="editor-toolbar">
+        <span>Insert:</span>
+
+        <!--
+          insert-img-btn — clicking this opens a file picker.
+          The hidden <input type="file"> is positioned over the button
+          so clicking the button actually triggers the file picker.
+        -->
+        <button class="insert-img-btn" title="Insert image at cursor position">
+          📷 Image
+          <input type="file" accept="image/*" onchange="insertInlineImage(event)">
+        </button>
+      </div>
+
+      <textarea id="input-content" class="with-toolbar" rows="7"
+        placeholder="Write your post here...
+
+Separate paragraphs with a blank line.
+
+Use the 📷 Image button above to insert images in the middle of your text.
+
+For math: \( E = mc^2 \) or \[ \int_a^b f(x)\,dx \]"></textarea>
+      <div class="field-error">Please write some content.</div>
+
+      <!--
+        INLINE IMAGES LIST
+        After inserting an image, a small preview card appears here
+        showing which images are embedded and where.
+        Each card has a × button to remove that image.
+      -->
+      <div class="inline-images-list" id="inline-images-list"></div>
+
+      <div class="latex-hint">
+        <strong>✨ LaTeX Math — Quick Reference</strong>
+        <div class="latex-grid">
+          <span><code>\( E = mc^2 \)</code> → inline</span>
+          <span><code>\[ x = \frac{-b}{2a} \]</code> → block</span>
+          <span><code>\frac{a}{b}</code> → fraction</span>
+          <span><code>\sqrt{x}</code> → square root</span>
+          <span><code>x^{2}</code> → superscript</span>
+          <span><code>x_{i}</code> → subscript</span>
+          <span><code>\sum_{i=1}^{n}</code> → summation</span>
+          <span><code>\int_{a}^{b}</code> → integral</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATEGORY + READ TIME -->
+    <div class="field-row">
+      <div class="field" id="field-tag">
+        <label for="input-tag">Category *</label>
+        <select id="input-tag">
+          <option value="">— Pick a category —</option>
+          <option value="Life">Life</option>
+          <option value="Books">Books</option>
+          <option value="Travel">Travel</option>
+          <option value="Learning">Learning</option>
+          <option value="Math">Math</option>
+          <option value="Food">Food</option>
+          <option value="Tech">Tech</option>
+          <option value="Health">Health</option>
+          <option value="Other">Other</option>
+        </select>
+        <div class="field-error">Please choose a category.</div>
+      </div>
+      <div class="field">
+        <label for="input-readtime">Est. Read Time</label>
+        <select id="input-readtime">
+          <option value="1 min read">1 min read</option>
+          <option value="2 min read">2 min read</option>
+          <option value="3 min read" selected>3 min read</option>
+          <option value="4 min read">4 min read</option>
+          <option value="5 min read">5 min read</option>
+          <option value="7 min read">7 min read</option>
+          <option value="10 min read">10 min read</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-cancel" onclick="closeWriteModal()">Cancel</button>
+      <button class="btn-publish" onclick="publishPost()">🚀 Publish Post</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ Post published!</div>
+<footer>© 2024 <span>DailyJournal</span> — Written with ❤️ every single day</footer>
+
+<script>
+// ═══════════════════════════════════════════
+//  INDEXEDDB SETUP
+// ═══════════════════════════════════════════
+const DB_NAME = 'BlogDB', DB_VERSION = 1, STORE_NAME = 'posts';
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = e => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains(STORE_NAME)) {
+        database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+    request.onsuccess = e => resolve(e.target.result);
+    request.onerror   = e => reject(e.target.error);
+  });
+}
+
+function savePost(post) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const request = tx.objectStore(STORE_NAME).put(post);
+    request.onsuccess = () => resolve();
+    request.onerror   = () => reject(request.error);
+  });
+}
+
+function loadAllPosts() {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const request = tx.objectStore(STORE_NAME).getAll();
+    request.onsuccess = () => resolve(request.result.sort((a,b) => b.id - a.id));
+    request.onerror   = () => reject(request.error);
+  });
+}
+
+function deleteAllPosts() {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const request = tx.objectStore(STORE_NAME).clear();
+    request.onsuccess = () => resolve();
+    request.onerror   = () => reject(request.error);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  DEFAULT POSTS
+// ═══════════════════════════════════════════
+const defaultPosts = [
+  {
+    id: 1, featured: true,
+    title: "Why I Started Writing Every Single Day",
+    excerpt: "It started as a challenge — just 30 days. Two years later, I haven't stopped.",
+    content: "<p>Two years ago, I made a bet with myself. Write something — anything — every single day for 30 days. No excuses, no skipping.</p><p>I expected it to be hard. I didn't expect it to change the way I think entirely.</p><p>Writing every day is less about producing great work and more about staying in practice. Like a musician running scales — most of it isn't music, but it keeps your fingers ready for when the music comes.</p>",
+    image: "", date: "March 10, 2024", tag: "Life", readTime: "4 min read"
+  },
+  {
+    id: 2, featured: false,
+    title: "Beautiful Math: Formulas That Changed the World",
+    excerpt: "From Einstein's E=mc² to Euler's identity — the most elegant equations in mathematics.",
+    content: "<p>Mathematics has a beauty that few other disciplines can match.</p><p><strong>Einstein's Mass-Energy Equivalence:</strong></p><p>\\[ E = mc^2 \\]</p><p><strong>The Quadratic Formula:</strong></p><p>\\[ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} \\]</p><p><strong>Euler's Identity:</strong></p><p>\\[ e^{i\\pi} + 1 = 0 \\]</p>",
+    image: "", date: "March 9, 2024", tag: "Math", readTime: "3 min read"
+  },
+  {
+    id: 3, featured: false,
+    title: "Notes from a Weekend in the Mountains",
+    excerpt: "No phone signal, no agenda, no alarm clock. Just two days of cold air and long walks.",
+    content: "<p>I left Friday afternoon with a bag I packed in ten minutes. I turned off notifications before the city was behind me.</p><p>I came back with three good ideas and the firm belief that everyone should disappear for a weekend at least twice a year.</p>",
+    image: "", date: "March 8, 2024", tag: "Travel", readTime: "5 min read"
+  }
+];
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let posts        = [];
+let activeTag    = 'All';
+let searchQuery  = '';
+let coverImage   = '';      // base64 for the cover image
+let inlineImages = {};      // key: placeholder tag, value: base64 string
+                            // e.g. { '[[IMG_1234]]': 'data:image/jpeg;base64,...' }
+
+// ═══════════════════════════════════════════
+//  INLINE IMAGE INSERTION
+//
+//  How it works:
+//  1. User clicks 📷 Image button in the toolbar
+//  2. File picker opens, user picks an image
+//  3. We generate a unique placeholder like [[IMG_1709123456]]
+//  4. That placeholder is inserted into the textarea at the cursor
+//  5. The actual base64 image is stored in inlineImages{}
+//  6. A small preview card appears below the textarea
+//  7. On publish, we replace each placeholder with a real <img> tag
+// ═══════════════════════════════════════════
+function insertInlineImage(event) {
+  const file = event.target.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64 = e.target.result;
+
+    // Generate a unique tag for this image
+    // e.g. [[IMG_1709234567890]]
+    const tag = `[[IMG_${Date.now()}]]`;
+
+    // Store the base64 in our inlineImages map
+    inlineImages[tag] = base64;
+
+    // Insert the tag at the cursor position in the textarea
+    insertAtCursor(document.getElementById('input-content'), tag);
+
+    // Show a preview card below the textarea
+    addInlinePreview(tag, base64);
+
+    // Reset the file input so same file can be selected again
+    event.target.value = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+// Insert text at the cursor position inside a textarea
+function insertAtCursor(textarea, text) {
+  const start = textarea.selectionStart;  // cursor start position
+  const end   = textarea.selectionEnd;    // cursor end position
+  const value = textarea.value;
+
+  // Build new value: text before cursor + our tag + text after cursor
+  textarea.value =
+    value.substring(0, start) +
+    '\n' + text + '\n' +        // add newlines around the tag
+    value.substring(end);
+
+  // Move cursor to after the inserted tag
+  textarea.selectionStart = start + text.length + 2;
+  textarea.selectionEnd   = start + text.length + 2;
+  textarea.focus();
+}
+
+// Show a small preview card for each inline image below the textarea
+function addInlinePreview(tag, base64) {
+  const list = document.getElementById('inline-images-list');
+  const item = document.createElement('div');
+  item.className = 'inline-img-item';
+  item.id = 'preview-' + tag.replace(/[\[\]]/g, '');  // safe id
+  item.innerHTML = `
+    <img src="${base64}" alt="Inline image">
+    <div class="inline-img-info">
+      <span>📍 Inserted at cursor as: <span class="inline-img-tag">${tag}</span></span>
+      <button class="remove-inline-btn" onclick="removeInlineImage('${tag}')" title="Remove image">✕</button>
+    </div>
+  `;
+  list.appendChild(item);
+}
+
+// Remove an inline image — deletes it from the map, textarea, and preview
+function removeInlineImage(tag) {
+  // Remove from map
+  delete inlineImages[tag];
+
+  // Remove the tag from the textarea text
+  const textarea = document.getElementById('input-content');
+  textarea.value = textarea.value.replace(tag, '').replace(/\n\n+/g, '\n\n');
+
+  // Remove the preview card
+  const safeId = 'preview-' + tag.replace(/[\[\]]/g, '');
+  const el = document.getElementById(safeId);
+  if (el) el.remove();
+}
+
+// ═══════════════════════════════════════════
+//  RENDER CONTENT
+//  Converts placeholder tags → real <img> tags
+//  and plain text paragraphs → <p> tags
+// ═══════════════════════════════════════════
+function renderContent(rawText, images) {
+  // Split by blank lines into blocks (paragraphs or image tags)
+  const blocks = rawText.split('\n\n').filter(b => b.trim() !== '');
+
+  return blocks.map(block => {
+    block = block.trim();
+
+    // Check if this block is an image placeholder like [[IMG_123456]]
+    const imgMatch = block.match(/^\[\[IMG_(\d+)\]\]$/);
+    if (imgMatch) {
+      const tag   = block;
+      const src   = images[tag];
+      if (src) {
+        // Replace placeholder with an actual <img> tag
+        return `<img src="${src}" alt="Post image">`;
+      }
+      return '';  // image was removed, skip
+    }
+
+    // Otherwise it's a normal paragraph
+    return `<p>${block}</p>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  COVER IMAGE UPLOAD
+// ═══════════════════════════════════════════
+function handleCoverUpload(event) {
+  const file = event.target.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    coverImage = e.target.result;
+    document.getElementById('preview-img').src           = coverImage;
+    document.getElementById('image-preview').style.display = 'block';
+    document.getElementById('upload-area').style.display   = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeCoverImage() {
+  coverImage = '';
+  document.getElementById('preview-img').src             = '';
+  document.getElementById('image-preview').style.display = 'none';
+  document.getElementById('upload-area').style.display   = 'block';
+  document.getElementById('image-input').value           = '';
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+async function init() {
+  document.getElementById('hero-date').textContent =
+    new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  db    = await openDB();
+  posts = await loadAllPosts();
+  if (posts.length === 0) {
+    for (const p of defaultPosts) await savePost(p);
+    posts = await loadAllPosts();
+  }
+  buildTagFilter(); rebuildSidebar(); renderPosts(); updateStorageCount();
+  document.getElementById('search-input').addEventListener('input', function() {
+    searchQuery = this.value.toLowerCase(); renderPosts();
+  });
+  // Drag and drop for cover image
+  const area = document.getElementById('upload-area');
+  area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('dragover'); });
+  area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+  area.addEventListener('drop', e => {
+    e.preventDefault(); area.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleCoverUpload({ target: { files: [file] } });
+  });
+}
+
+// ═══════════════════════════════════════════
+//  PUBLISH POST
+// ═══════════════════════════════════════════
+async function publishPost() {
+  if (!validateForm()) return;
+
+  const title    = document.getElementById('input-title').value.trim();
+  const excerpt  = document.getElementById('input-excerpt').value.trim();
+  const rawText  = document.getElementById('input-content').value.trim();
+  const tag      = document.getElementById('input-tag').value;
+  const readTime = document.getElementById('input-readtime').value;
+
+  // Convert text + image placeholders → HTML content
+  const content = renderContent(rawText, inlineImages);
+
+  const newPost = {
+    id:       Date.now(),
+    title:    escapeHTML(title),
+    excerpt:  escapeHTML(excerpt),
+    content,
+    image:    coverImage,
+    date:     new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }),
+    tag, readTime, featured: false
+  };
+
+  await savePost(newPost);
+  posts = await loadAllPosts();
+  resetForm();
+  closeWriteModal();
+  activeTag = 'All';
+  buildTagFilter(); rebuildSidebar(); renderPosts();
+  updateStorageCount();
+  showToast();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function clearAllPosts() {
+  if (!confirm('Delete ALL saved posts?')) return;
+  await deleteAllPosts();
+  for (const p of defaultPosts) await savePost(p);
+  posts = await loadAllPosts();
+  activeTag = 'All';
+  buildTagFilter(); rebuildSidebar(); renderPosts(); updateStorageCount();
+}
+
+// ═══════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════
+function updateStorageCount() {
+  const el = document.getElementById('storage-count');
+  if (el) el.textContent = posts.length;
+}
+
+function getUniqueTags() {
+  return ['All', ...new Set(posts.map(p => p.tag))];
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildTagFilter() {
+  const container = document.getElementById('tag-filter');
+  container.innerHTML = '';
+  getUniqueTags().forEach(tag => {
+    const btn = document.createElement('button');
+    btn.className = 'tag-btn' + (tag === activeTag ? ' active' : '');
+    btn.textContent = tag;
+    btn.onclick = () => {
+      activeTag = tag;
+      document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderPosts();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function rebuildSidebar() {
+  const tagsCloud = document.getElementById('tags-cloud');
+  tagsCloud.innerHTML = '';
+  getUniqueTags().filter(t => t !== 'All').forEach(tag => {
+    const span = document.createElement('span');
+    span.className = 'cloud-tag'; span.textContent = tag;
+    span.onclick = () => { activeTag = tag; buildTagFilter(); renderPosts(); window.scrollTo({top:0,behavior:'smooth'}); };
+    tagsCloud.appendChild(span);
+  });
+  const months = {};
+  posts.forEach(p => {
+    const parts = p.date.split(' ');
+    const month = parts[0] + ' ' + parts[2];
+    months[month] = (months[month] || 0) + 1;
+  });
+  const archiveList = document.getElementById('archive-list');
+  archiveList.innerHTML = '';
+  Object.entries(months).forEach(([month, count]) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span>${month}</span><span class="archive-count">${count}</span>`;
+    archiveList.appendChild(li);
+  });
+}
+
+function renderPosts() {
+  const container = document.getElementById('posts-container');
+  let filtered = posts.filter(p => {
+    const matchTag    = activeTag === 'All' || p.tag === activeTag;
+    const matchSearch = p.title.toLowerCase().includes(searchQuery) || p.excerpt.toLowerCase().includes(searchQuery);
+    return matchTag && matchSearch;
+  });
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><p>No posts found!</p></div>`;
+    return;
+  }
+  container.innerHTML = filtered.map((post, i) => `
+    <article class="post-card ${post.featured && i===0 ? 'featured' : ''}"
+             onclick="openReadModal(${post.id})"
+             style="animation-delay:${i*0.06}s">
+      ${post.image ? `<img class="post-cover" src="${post.image}" alt="${post.title}">` : '<div class="post-banner"></div>'}
+      <div class="post-body">
+        <div class="post-meta">
+          <span class="post-date">📅 ${post.date}</span>
+          <span class="post-tag">${post.tag}</span>
+        </div>
+        <h2 class="post-title">${post.title}</h2>
+        <p class="post-excerpt">${post.excerpt}</p>
+        <div class="post-footer">
+          <button class="read-more">Read more →</button>
+          <span class="read-time">⏱ ${post.readTime}</span>
+        </div>
+      </div>
+    </article>
+  `).join('');
+}
+
+function countChars(inputId, countId, max) {
+  const len = document.getElementById(inputId).value.length;
+  const counter = document.getElementById(countId);
+  counter.textContent = `${len} / ${max}`;
+  counter.classList.toggle('warn', len > max * 0.9);
+}
+
+function validateForm() {
+  let valid = true;
+  [['field-title','input-title'],['field-excerpt','input-excerpt'],
+   ['field-content','input-content'],['field-tag','input-tag']].forEach(([fId,iId]) => {
+    const empty = document.getElementById(iId).value.trim() === '';
+    document.getElementById(fId).classList.toggle('invalid', empty);
+    if (empty) valid = false;
+  });
+  return valid;
+}
+
+function resetForm() {
+  ['input-title','input-excerpt','input-content'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('input-tag').value = '';
+  document.getElementById('input-readtime').value = '3 min read';
+  document.getElementById('count-title').textContent   = '0 / 80';
+  document.getElementById('count-excerpt').textContent = '0 / 160';
+  ['field-title','field-excerpt','field-content','field-tag'].forEach(id => document.getElementById(id).classList.remove('invalid'));
+  removeCoverImage();
+  // Clear inline images
+  inlineImages = {};
+  document.getElementById('inline-images-list').innerHTML = '';
+}
+
+function openWriteModal() {
+  document.getElementById('write-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('input-title').focus(), 300);
+}
+
+function closeWriteModal(event) {
+  if (event && event.target !== document.getElementById('write-overlay')) return;
+  document.getElementById('write-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function openReadModal(id) {
+  const post = posts.find(p => p.id === id);
+  if (!post) return;
+  document.getElementById('modal-tag').textContent   = post.tag;
+  document.getElementById('modal-title').textContent = post.title;
+  document.getElementById('modal-meta').textContent  = `${post.date}  ·  ${post.readTime}`;
+  document.getElementById('modal-content').innerHTML = post.content;
+  const heroImg = document.getElementById('modal-hero-img');
+  if (post.image) { heroImg.src = post.image; heroImg.style.display = 'block'; }
+  else            { heroImg.src = '';          heroImg.style.display = 'none';  }
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => {
+    if (window.MathJax) MathJax.typesetPromise([document.getElementById('modal-content')]);
+  }, 100);
+}
+
+function closeReadModal(event) {
+  if (event && event.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function showToast() {
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.getElementById('write-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+});
+
+init();
+</script>
+</body>
+</html>
