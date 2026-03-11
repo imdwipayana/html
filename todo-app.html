@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My To-Do App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── VARIABLES ── */
+    :root {
+      --bg:       #0f0f0f;
+      --surface:  #1a1a1a;
+      --border:   #2e2e2e;
+      --accent:   #c8f04a;
+      --text:     #f0f0f0;
+      --muted:    #666;
+      --done:     #3a3a3a;
+    }
+
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 60px 20px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+    }
+
+    /* ── HEADER ── */
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+
+    /* ── INPUT ROW ── */
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--muted);
+    }
+
+    button.add-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    button.add-btn:hover  { opacity: 0.85; }
+    button.add-btn:active { transform: scale(0.95); }
+
+    /* ── FILTER TABS ── */
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active,
+    .filter-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── TASK LIST ── */
+    #task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 40px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      animation: slideIn 0.25s ease;
+      transition: opacity 0.3s;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Custom checkbox */
+    .task-item input[type="checkbox"] {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .task-item input[type="checkbox"]:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .task-item input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #000;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    /* Task label */
+    .task-label {
+      flex: 1;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+      word-break: break-word;
+    }
+
+    .task-item.done .task-label {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    /* Delete button */
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+      line-height: 1;
+    }
+
+    .delete-btn:hover {
+      color: #ff5f5f;
+      background: rgba(255,95,95,0.1);
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .clear-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+
+    .clear-btn:hover { color: #ff5f5f; }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 30px 0;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>My Tasks</h1>
+  <p class="subtitle">Stay focused. Get things done.</p>
+
+  <!-- Input Row -->
+  <div class="input-row">
+    <input type="text" id="task-input" placeholder="Add a new task..." />
+    <button class="add-btn" onclick="addTask()">+</button>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+    <button class="filter-btn" onclick="setFilter('active', this)">Active</button>
+    <button class="filter-btn" onclick="setFilter('done', this)">Done</button>
+  </div>
+
+  <!-- Task List -->
+  <ul id="task-list"></ul>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span id="count-label">0 tasks left</span>
+    <button class="clear-btn" onclick="clearDone()">Clear completed</button>
+  </div>
+</div>
+
+<script>
+  // ── DATA ──
+  let tasks = [];         // array of task objects
+  let currentFilter = 'all';
+
+  // ── ADD TASK ──
+  function addTask() {
+    const input = document.getElementById('task-input');
+    const text = input.value.trim();
+
+    if (text === '') return;   // ignore empty input
+
+    // Create a new task object
+    const task = {
+      id: Date.now(),          // unique ID using timestamp
+      text: text,
+      done: false
+    };
+
+    tasks.push(task);          // add to array
+    input.value = '';          // clear input
+    input.focus();
+    render();                  // refresh the list
+  }
+
+  // ── TOGGLE DONE ──
+  function toggleTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (task) task.done = !task.done;
+    render();
+  }
+
+  // ── DELETE TASK ──
+  function deleteTask(id) {
+    tasks = tasks.filter(t => t.id !== id);  // remove from array
+    render();
+  }
+
+  // ── CLEAR COMPLETED ──
+  function clearDone() {
+    tasks = tasks.filter(t => !t.done);
+    render();
+  }
+
+  // ── SET FILTER ──
+  function setFilter(filter, btn) {
+    currentFilter = filter;
+
+    // Update active tab styling
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    render();
+  }
+
+  // ── RENDER ──
+  function render() {
+    const list = document.getElementById('task-list');
+
+    // Filter tasks based on current tab
+    let filtered = tasks;
+    if (currentFilter === 'active') filtered = tasks.filter(t => !t.done);
+    if (currentFilter === 'done')   filtered = tasks.filter(t => t.done);
+
+    // Empty state
+    if (filtered.length === 0) {
+      list.innerHTML = '<li class="empty">No tasks here! 🎉</li>';
+    } else {
+      // Build HTML for each task
+      list.innerHTML = filtered.map(task => `
+        <li class="task-item ${task.done ? 'done' : ''}" id="task-${task.id}">
+          <input type="checkbox" ${task.done ? 'checked' : ''}
+            onchange="toggleTask(${task.id})">
+          <span class="task-label">${escapeHTML(task.text)}</span>
+          <button class="delete-btn" onclick="deleteTask(${task.id})">✕</button>
+        </li>
+      `).join('');
+    }
+
+    // Update counter
+    const remaining = tasks.filter(t => !t.done).length;
+    document.getElementById('count-label').textContent =
+      `${remaining} task${remaining !== 1 ? 's' : ''} left`;
+  }
+
+  // ── SAFETY: prevent code injection ──
+  function escapeHTML(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── PRESS ENTER TO ADD ──
+  document.getElementById('task-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addTask();
+  });
+
+  // ── INITIAL RENDER ──
+  render();
+</script>
+
+</body>
+</html>
