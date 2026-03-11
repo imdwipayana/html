@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Journal — My Blog</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Fira+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── VARIABLES ── */
+    :root {
+      --bg:        #faf7f2;
+      --paper:     #ffffff;
+      --ink:       #1a1612;
+      --muted:     #8a7f74;
+      --accent:    #c0392b;
+      --accent2:   #e8d5b0;
+      --border:    #e0d8cc;
+      --tag-bg:    #f0ebe2;
+    }
+
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Fira Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--ink);
+      color: var(--bg);
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 70px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.2);
+    }
+
+    .logo {
+      font-family: 'Lora', serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.02em;
+    }
+
+    .logo span { color: var(--accent); font-style: italic; }
+
+    nav { display: flex; gap: 28px; }
+
+    nav a {
+      color: var(--bg);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    nav a:hover { opacity: 1; }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--ink);
+      color: var(--bg);
+      padding: 80px 40px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 28px,
+        rgba(255,255,255,0.03) 28px,
+        rgba(255,255,255,0.03) 29px
+      );
+    }
+
+    .hero-date {
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .hero h1 {
+      font-family: 'Lora', serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1.2;
+      max-width: 680px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    .hero p {
+      color: rgba(250,247,242,0.6);
+      max-width: 500px;
+      margin: 0 auto;
+      font-size: 1rem;
+      position: relative;
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 40px;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 60px;
+      align-items: start;
+    }
+
+    /* ── SEARCH & FILTER ── */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px 10px 40px;
+      font-family: 'Fira Sans', sans-serif;
+      font-size: 0.9rem;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus { border-color: var(--accent); }
+    .search-box input::placeholder { color: var(--muted); }
+
+    .search-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .tag-filter {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tag-btn {
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-family: 'Fira Sans', sans-serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tag-btn:hover,
+    .tag-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* ── BLOG POSTS ── */
+    #posts-container { display: flex; flex-direction: column; gap: 32px; }
+
+    .post-card {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: fadeUp 0.4s ease both;
+      cursor: pointer;
+    }
+
+    .post-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .post-card:nth-child(1) { animation-delay: 0.05s; }
+    .post-card:nth-child(2) { animation-delay: 0.10s; }
+    .post-card:nth-child(3) { animation-delay: 0.15s; }
+    .post-card:nth-child(4) { animation-delay: 0.20s; }
+
+    .post-banner {
+      height: 6px;
+      background: var(--accent);
+    }
+
+    .post-body { padding: 28px 32px; }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .post-date {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .post-tag {
+      background: var(--tag-bg);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .post-title {
+      font-family: 'Lora', serif;
+      font-size: 1.4rem;
+      line-height: 1.3;
+      margin-bottom: 12px;
+      color: var(--ink);
+    }
+
+    .post-excerpt {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .post-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .read-more {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+
+    .read-more:hover { border-color: var(--accent); }
+
+    .read-time {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* ── FEATURED (first post) ── */
+    .post-card.featured .post-banner { height: 4px; background: linear-gradient(90deg, var(--accent), #e67e22); }
+    .post-card.featured .post-title  { font-size: 1.7rem; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state .emoji { font-size: 2.5rem; margin-bottom: 12px; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { display: flex; flex-direction: column; gap: 28px; }
+
+    .widget {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .widget-title {
+      font-family: 'Lora', serif;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--ink);
+    }
+
+    /* About widget */
+    .about-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #e67e22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      margin-bottom: 14px;
+    }
+
+    .about-name {
+      font-family: 'Lora', serif;
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .about-bio {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Archive widget */
+    .archive-list { list-style: none; }
+
+    .archive-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .archive-list li:last-child { border-bottom: none; }
+    .archive-list li:hover { color: var(--accent); }
+
+    .archive-count {
+      background: var(--tag-bg);
+      border-radius: 20px;
+      padding: 1px 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* Tags widget */
+    .tags-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .cloud-tag {
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .cloud-tag:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* ── MODAL (full post view) ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26,22,18,0.75);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--paper);
+      border-radius: 16px;
+      max-width: 680px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 48px;
+      position: relative;
+      transform: translateY(20px);
+      transition: transform 0.3s;
+    }
+
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--tag-bg);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: var(--muted);
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover { background: var(--border); }
+
+    .modal-tag {
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+
+    .modal-title {
+      font-family: 'Lora', serif;
+      font-size: 2rem;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    .modal-meta {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-bottom: 28px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-content {
+      font-size: 1rem;
+      line-height: 1.85;
+      color: #333;
+    }
+
+    .modal-content p { margin-bottom: 18px; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      color: rgba(250,247,242,0.5);
+      text-align: center;
+      padding: 28px;
+      font-size: 0.82rem;
+      margin-top: 40px;
+    }
+
+    footer span { color: var(--accent); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; padding: 40px 20px; }
+      .sidebar { display: none; }
+      header { padding: 0 20px; }
+      nav { display: none; }
+      .hero { padding: 50px 20px 40px; }
+      .modal { padding: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">Daily<span>Journal</span></div>
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">About</a>
+    <a href="#">Archive</a>
+    <a href="#">Contact</a>
+  </nav>
+</header>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-date" id="hero-date"></div>
+  <h1>Thoughts, stories &amp; ideas worth sharing</h1>
+  <p>A personal journal updated daily — honest writing about life, learning, and everything in between.</p>
+</div>
+
+<!-- ── MAIN LAYOUT ── -->
+<div class="container">
+
+  <!-- MAIN COLUMN -->
+  <main>
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search posts...">
+      </div>
+      <div class="tag-filter" id="tag-filter"></div>
+    </div>
+
+    <!-- Posts -->
+    <div id="posts-container"></div>
+  </main>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- About -->
+    <div class="widget">
+      <div class="widget-title">About Me</div>
+      <div class="about-avatar">✍️</div>
+      <div class="about-name">Alex Morgan</div>
+      <p class="about-bio">Writer, thinker, coffee enthusiast. I write here every day about whatever's on my mind — life, books, travel, and the occasional existential crisis.</p>
+    </div>
+
+    <!-- Archive -->
+    <div class="widget">
+      <div class="widget-title">Archive</div>
+      <ul class="archive-list" id="archive-list"></ul>
+    </div>
+
+    <!-- Tags -->
+    <div class="widget">
+      <div class="widget-title">Topics</div>
+      <div class="tags-cloud" id="tags-cloud"></div>
+    </div>
+
+  </aside>
+</div>
+
+<!-- ── MODAL ── -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-tag"  id="modal-tag"></div>
+    <h2 class="modal-title" id="modal-title"></h2>
+    <div class="modal-meta"  id="modal-meta"></div>
+    <div class="modal-content" id="modal-content"></div>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  © 2024 <span>DailyJournal</span> — Written with ❤️ every single day
+</footer>
+
+<script>
+  // ═══════════════════════════════════════
+  //  DATA — Blog posts array
+  // ═══════════════════════════════════════
+  const posts = [
+    {
+      id: 1,
+      title: "Why I Started Writing Every Single Day",
+      excerpt: "It started as a challenge — just 30 days. Two years later, I haven't stopped. Here's what daily writing taught me about clarity, discipline, and finding your voice.",
+      content: `<p>Two years ago, I made a bet with myself. Write something — anything — every single day for 30 days. No excuses, no skipping, no minimum length. Just the act of putting words on a page.</p>
+      <p>I expected it to be hard. I didn't expect it to change the way I think entirely.</p>
+      <p>The first week was the hardest. Some days I wrote three sentences. Some days I wrote about how much I didn't want to write. But I showed up every day, and somewhere around day 12, something shifted. The words started coming easier. The thoughts became clearer. I started noticing things in my day that I wanted to write about — a conversation, a book passage, a fleeting thought on a walk.</p>
+      <p>Writing every day is less about producing great work and more about staying in practice. Like a musician running scales — most of it isn't music, but it keeps your fingers ready for when the music comes.</p>
+      <p>If you've ever thought about starting a daily writing habit, my advice is simple: start small, stay consistent, and don't judge the output. The goal isn't great writing. The goal is showing up.</p>`,
+      date: "March 10, 2024",
+      tag: "Life",
+      readTime: "4 min read",
+      featured: true
+    },
+    {
+      id: 2,
+      title: "The Best Book I Read This Month",
+      excerpt: "A quiet novel about memory and loss that I almost put down after the first chapter — and couldn't stop thinking about for weeks after finishing it.",
+      content: `<p>I almost gave up on this book after the first chapter. The prose felt slow, the narrator unreliable, and I wasn't sure where it was going. I'm so glad I kept reading.</p>
+      <p>Without spoiling too much — it's a story told in reverse. We start at the ending and work our way backward, and what first feels like a gimmick becomes, by the final pages, absolutely devastating in its logic.</p>
+      <p>What struck me most was how the author handles memory. We don't remember our lives chronologically. We remember in flashes, in feelings, in the emotional weight of specific moments. This book captures that perfectly.</p>
+      <p>It's the kind of book that makes you want to call someone you haven't spoken to in years. Or write a letter. Or at least sit quietly for a few minutes and think about the people who shaped you.</p>
+      <p>I won't name it here — I want you to find it yourself, the way I did, without expectation. Ask a good librarian. Tell them you want something that will make you feel something real.</p>`,
+      date: "March 9, 2024",
+      tag: "Books",
+      readTime: "3 min read",
+      featured: false
+    },
+    {
+      id: 3,
+      title: "Notes from a Weekend in the Mountains",
+      excerpt: "No phone signal, no agenda, no alarm clock. Just two days of cold air, long walks, and the kind of thinking that only happens when you get far enough from everything.",
+      content: `<p>I left Friday afternoon with a bag I packed in ten minutes and a destination I'd chosen on a map by closing my eyes and pointing. I told no one where I was going exactly. I turned off notifications before the city was behind me.</p>
+      <p>The first evening, I didn't know what to do with myself. I'm embarrassed to admit how long I reached for my phone before remembering I'd left it in the bag. I sat by the window and watched the light change on the ridge until it was dark.</p>
+      <p>Saturday I walked for five hours. Not hiking exactly — just walking, wherever the path went. I thought about a lot of things. Some of them mattered. Most of them didn't. But the thinking felt different out there, less circular, like the space between thoughts got bigger and something useful could grow in it.</p>
+      <p>I came back with three good ideas, a slightly twisted ankle, and the firm belief that everyone should disappear for a weekend at least twice a year. Not to find yourself — that's too dramatic. Just to remember what it feels like when there's nothing asking anything of you.</p>`,
+      date: "March 8, 2024",
+      tag: "Travel",
+      readTime: "5 min read",
+      featured: false
+    },
+    {
+      id: 4,
+      title: "On Learning Something Hard After 30",
+      excerpt: "I picked up the guitar at 34. I was terrible. I'm still not good. But the experience of being a beginner again — truly lost and frustrated — turned out to be exactly what I needed.",
+      content: `<p>At 34, I decided to learn guitar. My teacher was 19. Every lesson, she was patient and encouraging while I fumbled through chord transitions that her students half my age learned in a single session.</p>
+      <p>It was humbling in a way that was really good for me.</p>
+      <p>Adults don't like being bad at things. We've spent years building competence in our careers, our relationships, our routines. We know how to do the things we do. Being a beginner again — truly clumsy and confused — feels uncomfortable in a way it doesn't when you're young and everything is new.</p>
+      <p>But there's something valuable in that discomfort. It rebuilds your empathy for people learning things you take for granted. It reminds you that skill is earned slowly. It forces a kind of patience with yourself that we rarely practice.</p>
+      <p>I can play four songs reasonably well now. I practice three times a week. I'll probably never be good. But every time I sit down with the guitar, I remember that being bad at something is just the beginning of being okay at it — and that's enough.</p>`,
+      date: "March 7, 2024",
+      tag: "Learning",
+      readTime: "4 min read",
+      featured: false
+    },
+    {
+      id: 5,
+      title: "Small Rituals That Make a Big Difference",
+      excerpt: "The morning coffee. The evening walk. The specific playlist for specific moods. The tiny, repeated habits that structure a life and make it feel like yours.",
+      content: `<p>I make coffee the same way every morning. It takes about eight minutes — longer than it needs to. I could use a faster method. I don't, because those eight minutes are mine.</p>
+      <p>I've been thinking about rituals lately — not grand ones, but the small, repeated behaviors that mark the shape of a day. The evening walk. The end-of-week review. The particular song I play when I need to focus.</p>
+      <p>These rituals don't look like much from the outside. But they're doing important work. They're anchors in the day. They're how I transition between modes — work and rest, public and private, input and output.</p>
+      <p>A life without rituals can feel shapeless. Too many routines can feel rigid. But finding the handful of small ceremonies that matter to you — and protecting them — seems to be one of the quiet secrets of a well-lived ordinary life.</p>
+      <p>What are yours? I'd genuinely like to know. Write to me.</p>`,
+      date: "March 6, 2024",
+      tag: "Life",
+      readTime: "3 min read",
+      featured: false
+    }
+  ];
+
+  // ═══════════════════════════════════════
+  //  STATE
+  // ═══════════════════════════════════════
+  let activeTag    = 'All';
+  let searchQuery  = '';
+
+  // ═══════════════════════════════════════
+  //  INIT
+  // ═══════════════════════════════════════
+  function init() {
+    // Set today's date in hero
+    const today = new Date();
+    document.getElementById('hero-date').textContent =
+      today.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+    buildTagFilter();
+    buildTagsCloud();
+    buildArchive();
+    renderPosts();
+
+    // Search listener
+    document.getElementById('search-input').addEventListener('input', function() {
+      searchQuery = this.value.toLowerCase();
+      renderPosts();
+    });
+  }
+
+  // ═══════════════════════════════════════
+  //  GET UNIQUE TAGS
+  // ═══════════════════════════════════════
+  function getTags() {
+    const tags = ['All', ...new Set(posts.map(p => p.tag))];
+    return tags;
+  }
+
+  // ═══════════════════════════════════════
+  //  BUILD TAG FILTER BUTTONS
+  // ═══════════════════════════════════════
+  function buildTagFilter() {
+    const container = document.getElementById('tag-filter');
+    getTags().forEach(tag => {
+      const btn = document.createElement('button');
+      btn.className = 'tag-btn' + (tag === 'All' ? ' active' : '');
+      btn.textContent = tag;
+      btn.onclick = () => {
+        activeTag = tag;
+        document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderPosts();
+      };
+      container.appendChild(btn);
+    });
+  }
+
+  // ═══════════════════════════════════════
+  //  BUILD SIDEBAR TAGS CLOUD
+  // ═══════════════════════════════════════
+  function buildTagsCloud() {
+    const container = document.getElementById('tags-cloud');
+    getTags().filter(t => t !== 'All').forEach(tag => {
+      const span = document.createElement('span');
+      span.className = 'cloud-tag';
+      span.textContent = tag;
+      span.onclick = () => {
+        activeTag = tag;
+        document.querySelectorAll('.tag-btn').forEach(b => {
+          b.classList.toggle('active', b.textContent === tag);
+        });
+        renderPosts();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+      container.appendChild(span);
+    });
+  }
+
+  // ═══════════════════════════════════════
+  //  BUILD ARCHIVE LIST
+  // ═══════════════════════════════════════
+  function buildArchive() {
+    // Group posts by month
+    const months = {};
+    posts.forEach(p => {
+      const month = p.date.split(' ').slice(0,2).join(' ');  // e.g. "March 2024"
+      months[month] = (months[month] || 0) + 1;
+    });
+
+    const list = document.getElementById('archive-list');
+    Object.entries(months).forEach(([month, count]) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span>${month}</span><span class="archive-count">${count}</span>`;
+      list.appendChild(li);
+    });
+  }
+
+  // ═══════════════════════════════════════
+  //  RENDER POSTS
+  // ═══════════════════════════════════════
+  function renderPosts() {
+    const container = document.getElementById('posts-container');
+
+    // Filter by tag and search
+    let filtered = posts.filter(p => {
+      const matchTag    = activeTag === 'All' || p.tag === activeTag;
+      const matchSearch = p.title.toLowerCase().includes(searchQuery) ||
+                          p.excerpt.toLowerCase().includes(searchQuery);
+      return matchTag && matchSearch;
+    });
+
+    // Empty state
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="emoji">📭</div>
+          <p>No posts found. Try a different search or tag!</p>
+        </div>`;
+      return;
+    }
+
+    // Build post cards
+    container.innerHTML = filtered.map((post, index) => `
+      <article class="post-card ${post.featured && index === 0 ? 'featured' : ''}"
+               onclick="openModal(${post.id})"
+               style="animation-delay: ${index * 0.07}s">
+        <div class="post-banner"></div>
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="post-date">📅 ${post.date}</span>
+            <span class="post-tag">${post.tag}</span>
+          </div>
+          <h2 class="post-title">${post.title}</h2>
+          <p class="post-excerpt">${post.excerpt}</p>
+          <div class="post-footer">
+            <span class="read-more">Read more →</span>
+            <span class="read-time">⏱ ${post.readTime}</span>
+          </div>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  // ═══════════════════════════════════════
+  //  MODAL — open
+  // ═══════════════════════════════════════
+  function openModal(id) {
+    const post = posts.find(p => p.id === id);
+    if (!post) return;
+
+    document.getElementById('modal-tag').textContent     = post.tag;
+    document.getElementById('modal-title').textContent   = post.title;
+    document.getElementById('modal-meta').textContent    = `${post.date}  ·  ${post.readTime}`;
+    document.getElementById('modal-content').innerHTML   = post.content;
+
+    document.getElementById('modal-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';   // prevent background scroll
+  }
+
+  // ═══════════════════════════════════════
+  //  MODAL — close
+  // ═══════════════════════════════════════
+  function closeModal(event) {
+    // Close only if clicking overlay (not the modal itself) or close button
+    if (event && event.target !== document.getElementById('modal-overlay')) return;
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Close with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.getElementById('modal-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // ═══════════════════════════════════════
+  //  START
+  // ═══════════════════════════════════════
+  init();
+</script>
+</body>
+</html>
